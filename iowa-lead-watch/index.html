@@ -96,6 +96,15 @@ section { padding-block: 28px; border-top: 1px solid var(--line); }
 .dial-read span { font-size: .75rem; color: var(--muted); }
 .towns { margin-top: 12px; font-size: .88rem; }
 
+/* far view */
+#far { width: 100%; height: auto; display: block; max-width: 620px; margin: 0 auto; }
+#far text { font-family: var(--f-body); fill: var(--ink); }
+.far-tbl td:nth-child(n+2), .far-tbl th:nth-child(n+2) { text-align: right; }
+.verdict { font: 500 .7rem var(--f-mono); padding: 2px 6px; border-radius: 3px; }
+.verdict.out { background: var(--ok-soft); color: var(--ok); }
+.verdict.in { background: var(--bad-soft); color: var(--bad); }
+.far-callout { font: 600 1.05rem var(--f-display); margin-bottom: 8px; }
+
 /* permit table */
 .tbl-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: .84rem; }
@@ -228,6 +237,28 @@ footer p { max-width: 90ch; margin-bottom: 6px; }
           <p class="note" style="margin:4px 0 10px">The emergency permit bars the blast with surface wind under 1 or over 15 mph, wind over 30 mph at 1,000–3,000 ft, or rain. Each cell: surface wind, direction it blows from, and the strongest wind at 1,000–3,000 ft.</p>
           <div class="tbl-wrap"><table id="wx"></table></div>
           <p class="note">The permit also bars thunderstorms, fog, a low overcast and an inversion, which a point forecast can't settle. All four models show 100% cloud cover this morning. Wind speeds are model forecasts at the plant, not measurements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="far-away">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Zoomed out · true scale</div><h2>Is my city in the path?</h2></div>
+        <p>Distances drawn to scale. The colored sliver is everything the model draws.</p>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <svg id="far" viewBox="0 0 620 620" role="img" aria-labelledby="far-title far-desc">
+            <title id="far-title">Regional view to 800 miles</title>
+            <desc id="far-desc">Major cities around the plant at true distance, with the modeled ground-lead reach and the direction the cloud travels.</desc>
+          </svg>
+        </div>
+        <div class="panel">
+          <p class="far-callout" id="far-callout"></p>
+          <div class="tbl-wrap"><table class="far-tbl" id="far-tbl"></table></div>
+          <p class="note">"Off path" is how far the city's direction is from the way the cloud heads at the selected hour and model. "Farthest reach" is the yellow line (5 µg/ft²) in the EPA permit case, which assumes all the lead gets airborne, in any of four forecasts: 90 mi. Past that the model draws nothing: the cloud keeps drifting (its center is about 139 mi southwest by 5 p.m.) but is too thin to reach a level of concern.</p>
         </div>
       </div>
     </div>
@@ -533,6 +564,7 @@ footer p { max-width: 90ch; margin-bottom: 6px; }
     document.getElementById("r-head").textContent = head != null ? `${compass(head)} · ${Math.round(head)}°` : "–";
     document.getElementById("r-reach").textContent = `${cs.y} mi`;
     hit.sort((a, b) => a.dist - b.dist);
+    renderFar(head, half);
     const hr = cst(new Date(Date.UTC(2026, 10, 25, state.hour)).toISOString());
     document.getElementById("towns").innerHTML = "";
     document.getElementById("towns").append(
@@ -548,6 +580,66 @@ footer p { max-width: 90ch; margin-bottom: 6px; }
       b.addEventListener("click", () => { state.caseId = c.id; store.set("ilw-case", c.id); renderCases(); renderDial(); });
       seg.append(b);
     }
+  }
+
+  // ---- far view -----------------------------------------------------------
+  const CITIES = [
+    ["Denver", 39.7392, -104.9903], ["Des Moines", 41.5868, -93.6250], ["Iowa City", 41.6611, -91.5302],
+    ["Cedar Rapids", 41.9779, -91.6656], ["Davenport", 41.5236, -90.5776], ["Chicago", 41.8781, -87.6298],
+    ["Peoria", 40.6936, -89.5890], ["Springfield, IL", 39.7817, -89.6501], ["St. Louis", 38.6270, -90.1994],
+    ["Columbia, MO", 38.9517, -92.3341], ["Kansas City", 39.0997, -94.5786], ["Omaha", 41.2565, -95.9345],
+    ["Minneapolis", 44.9778, -93.2650], ["Wichita", 37.6872, -97.3301], ["Tulsa", 36.1540, -95.9928],
+  ].map(([name, lat, lon]) => ({ name, ...polar(lat, lon) }));
+  const FAR_MAX = 800, FR = 270, FC = 310;
+  const fxy = (brg, d) => [FC + FR * d / FAR_MAX * Math.sin(brg * Math.PI / 180), FC - FR * d / FAR_MAX * Math.cos(brg * Math.PI / 180)];
+  function fwedge(center, half, d) {
+    const r = FR * d / FAR_MAX, p = a => [FC + r * Math.sin(a * Math.PI / 180), FC - r * Math.cos(a * Math.PI / 180)];
+    const [x1, y1] = p(center - half), [x2, y2] = p(center + half);
+    return `M${FC},${FC} L${x1},${y1} A${r},${r} 0 0 1 ${x2},${y2} Z`;
+  }
+  function renderFar(head, half) {
+    const svg = document.getElementById("far");
+    [...svg.querySelectorAll(":scope > :not(title):not(desc)")].forEach(n => n.remove());
+    const g = S("g"), worst = CASES[CASES.length - 1].yAny;
+    for (const d of [100, 250, 500, 750]) {
+      g.append(S("circle", { cx: FC, cy: FC, r: FR * d / FAR_MAX, fill: "none", stroke: "var(--ring)", "stroke-dasharray": "3 4" }));
+      g.append(Object.assign(S("text", { x: FC + 4, y: FC - FR * d / FAR_MAX - 4, "font-size": 11, style: "fill:var(--muted)" }), { textContent: `${d} mi` }));
+    }
+    if (head != null) {
+      const [tx, ty] = fxy(head, 139);
+      g.append(S("line", { x1: FC, y1: FC, x2: tx, y2: ty, stroke: "var(--ink)", "stroke-width": 1.5, "stroke-dasharray": "4 3" }));
+      g.append(S("path", { d: fwedge(head, half, worst), fill: "var(--plume)", stroke: "var(--lvl-o)", "stroke-width": 1.5 }));
+      g.append(S("circle", { cx: tx, cy: ty, r: 3, fill: "var(--ink)" }));
+      g.append(Object.assign(S("text", { x: tx + 6, y: ty + 16, "font-size": 11, "text-anchor": "start", style: "fill:var(--muted)" }), { textContent: "cloud center, 5 p.m." }));
+    }
+    for (const c of CITIES) {
+      const [x, y] = fxy(c.brg, c.dist), right = x >= FC, hi = c.name === "Denver";
+      g.append(S("circle", { cx: x, cy: y, r: hi ? 5 : 3.2, fill: hi ? "var(--accent)" : "var(--panel)", stroke: hi ? "var(--accent)" : "var(--ink)", "stroke-width": 1.2 }));
+      const nudge = { "Denver": [-6, -12, "start"], "Des Moines": [0, -6], "Columbia, MO": [0, 8], "Kansas City": [0, -4] }[c.name] || [0, 0];
+      const anchor = nudge[2] || (right ? "start" : "end");
+      if (c.dist > 60 || hi) g.append(Object.assign(S("text", { x: x + (anchor === "start" ? 7 : -7) + nudge[0], y: y + 4 + nudge[1], "font-size": hi ? 13 : 11.5, "font-weight": hi ? 700 : 400, "text-anchor": anchor }), { textContent: hi ? `Denver · ${Math.round(c.dist)} mi` : c.name }));
+    }
+    g.append(S("rect", { x: FC - 5, y: FC - 5, width: 10, height: 10, fill: "var(--ink)" }));
+    svg.append(g);
+
+    const t = document.getElementById("far-tbl"); t.replaceChildren();
+    t.append(el("thead", {}, el("tr", {}, ["City", "Distance", "Direction", "Off path", ""].map(h => el("th", { text: h })))));
+    const tb = el("tbody");
+    for (const c of [...CITIES].sort((a, b) => a.dist - b.dist)) {
+      const off = head == null ? null : angDiff(c.brg, head);
+      const inside = off != null && c.dist <= worst && off <= half;
+      tb.append(el("tr", {}, [
+        el("td", { text: c.name, style: c.name === "Denver" ? "font-weight:600" : "" }),
+        el("td", { class: "num", text: `${Math.round(c.dist)} mi` }),
+        el("td", { text: compass(c.brg) }),
+        el("td", { class: "num", text: off == null ? "–" : `${Math.round(off)}°` }),
+        el("td", {}, el("span", { class: "verdict " + (inside ? "in" : "out"), text: inside ? "IN SECTOR" : c.dist > worst ? `${(c.dist / worst).toFixed(1)}× reach` : "off path" })),
+      ]));
+    }
+    t.append(tb);
+    const den = CITIES.find(c => c.name === "Denver");
+    document.getElementById("far-callout").textContent = head == null ? "" :
+      `Denver is ${Math.round(den.dist)} miles ${compass(den.brg)} of the plant, ${(den.dist / worst).toFixed(1)} times the model's farthest reach and ${Math.round(angDiff(den.brg, head))}° off the cloud's path. No modeled lead reaches it.`;
   }
 
   // ---- reach bars ----------------------------------------------------------
