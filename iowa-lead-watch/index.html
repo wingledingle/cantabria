@@ -1,0 +1,640 @@
+<meta charset="utf-8">
+<title>Iowa Lead Watch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Unofficial tracker for the Army's planned lead azide detonation at the Iowa Army Ammunition Plant: countdown, wind and permit checks, where the lead could settle, official guidance and sources.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a field bulletin. Status band on top, then the wind dial beside the permit table, then reach, guidance, timeline, sources. */
+:root {
+  --bg: #eef0f2;          /* lead-tinted paper */
+  --panel: #f9fafb;
+  --ink: #1b2129;
+  --muted: #5a6573;
+  --line: #d3d8de;
+  --accent: #2b55c9;      /* signal blue, for interactive things */
+  --accent-soft: #dfe7fb;
+  --ok: #1f7a4a; --ok-soft: #dcf0e4;
+  --bad: #b3261e; --bad-soft: #f8dedc;
+  --lvl-y: #e0b400; --lvl-o: #e2711d; --lvl-r: #c62828;  /* EPA dust-lead levels 5 / 40 / 100 µg/ft² */
+  --plume: rgba(226,113,29,.22);
+  --ring: #c3cad2;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161b; --panel: #1a2027; --ink: #e6eaee; --muted: #9aa5b1; --line: #2c343e;
+  --accent: #7fa2ff; --accent-soft: #22304f; --ok: #5cc98d; --ok-soft: #173326; --bad: #ff8a80; --bad-soft: #3a1d1c;
+  --lvl-y: #f2cc3a; --lvl-o: #f08c3e; --lvl-r: #ef5350; --plume: rgba(240,140,62,.25); --ring: #38424e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12161b; --panel: #1a2027; --ink: #e6eaee; --muted: #9aa5b1; --line: #2c343e;
+  --accent: #7fa2ff; --accent-soft: #22304f; --ok: #5cc98d; --ok-soft: #173326; --bad: #ff8a80; --bad-soft: #3a1d1c;
+  --lvl-y: #f2cc3a; --lvl-o: #f08c3e; --lvl-r: #ef5350; --plume: rgba(240,140,62,.25); --ring: #38424e; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, td[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h2 { font-size: 1.45rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+.eyebrow { font: 500 .72rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+p { margin: 0; max-width: 68ch; }
+
+/* top strip */
+.strip { border-bottom: 1px solid var(--line); background: var(--panel); }
+.strip .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 1.05rem var(--f-display); letter-spacing: .01em; }
+.pb { display: grid; place-items: center; width: 30px; height: 30px; border: 1.5px solid var(--ink); font: 600 .8rem var(--f-mono); position: relative; }
+.pb::after { content: "82"; position: absolute; top: 1px; left: 2px; font-size: .45rem; }
+.unofficial { font-size: .82rem; color: var(--muted); }
+.unofficial strong { color: var(--ink); }
+
+/* status */
+.status { padding-block: 28px 24px; display: grid; gap: 20px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: end; }
+.status h1 { font-size: clamp(1.9rem, 4.6vw, 3.1rem); font-weight: 700; letter-spacing: -.01em; }
+.status .lede { margin-top: 10px; font-size: 1.02rem; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 999px; font: 500 .78rem var(--f-mono); letter-spacing: .04em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.pill.warn { background: var(--bad-soft); color: var(--bad); }
+@media (prefers-reduced-motion: no-preference) { .pill .dot { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .3; } } }
+.clock { border: 1px solid var(--line); background: var(--panel); padding: 16px 18px; display: grid; gap: 10px; }
+.count { display: flex; gap: 18px; flex-wrap: wrap; }
+.count div { display: grid; }
+.count b { font: 500 clamp(1.8rem, 5vw, 2.6rem)/1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.count span { font: .7rem var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; font-size: .86rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+
+/* sections */
+section { padding-block: 28px; border-top: 1px solid var(--line); }
+.sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; margin-bottom: 16px; }
+.sec-head p { font-size: .9rem; color: var(--muted); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.panel { background: var(--panel); border: 1px solid var(--line); padding: 16px; min-width: 0; }
+
+/* controls */
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); background: var(--bg); }
+.seg button { font: 500 .8rem var(--f-body); border: 0; background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.controls label { font-size: .78rem; color: var(--muted); }
+
+/* dial */
+#dial { width: 100%; height: auto; display: block; max-width: 560px; margin: 0 auto; }
+#dial text { font-family: var(--f-body); fill: var(--ink); }
+.dial-read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.dial-read div { border-top: 2px solid var(--ink); padding-top: 6px; min-width: 0; }
+.dial-read b { display: block; font: 500 1.15rem var(--f-mono); }
+.dial-read span { font-size: .75rem; color: var(--muted); }
+.towns { margin-top: 12px; font-size: .88rem; }
+
+/* permit table */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .84rem; }
+th, td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 500 .7rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.cell { cursor: pointer; }
+td.cell:hover { background: var(--accent-soft); }
+td.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+tr.blast th, tr.blast td:first-child { color: var(--ink); font-weight: 600; }
+.chip { display: inline-block; font: 500 .66rem var(--f-mono); padding: 1px 5px; margin-left: 4px; border-radius: 3px; vertical-align: 1px; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.no { background: var(--bad-soft); color: var(--bad); }
+.arrow { display: inline-block; font-family: var(--f-mono); }
+td .sub { font-size: .72rem; color: var(--muted); }
+td.cell { font-variant-numeric: tabular-nums; }
+.note { font-size: .8rem; color: var(--muted); margin-top: 10px; }
+
+/* reach bars */
+.reach { display: grid; gap: 14px; }
+.reach-row { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 12px; align-items: center; }
+.reach-row .lab b { display: block; font-family: var(--f-display); font-size: 1rem; }
+.reach-row .lab span { font-size: .76rem; color: var(--muted); }
+.bar { position: relative; height: 26px; }
+.bar i { position: absolute; left: 0; top: 4px; height: 18px; }
+.bar i.y { background: var(--lvl-y); } .bar i.o { background: var(--lvl-o); } .bar i.r { background: var(--lvl-r); }
+.bar i.any { background: transparent; border: 1.5px dashed var(--lvl-y); top: 4px; height: 18px; }
+.bar .val { position: absolute; top: 3px; font: .74rem var(--f-mono); white-space: nowrap; padding-left: 6px; }
+.axis { position: relative; height: 18px; margin-left: calc(11rem + 12px); font: .68rem var(--f-mono); color: var(--muted); }
+.axis span { position: absolute; transform: translateX(-50%); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--muted); margin-top: 12px; }
+.legend i { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; margin-right: 5px; }
+.air { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.air div { border-left: 3px solid var(--lvl-o); padding-left: 10px; }
+.air b { font: 500 1.3rem var(--f-mono); display: block; }
+.air span { font-size: .76rem; color: var(--muted); }
+
+/* guidance */
+.guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.guide .panel h3 { margin-bottom: 6px; }
+.guide .panel p { font-size: .9rem; }
+.phone { font: 500 1.25rem var(--f-mono); user-select: all; display: inline-block; margin: 6px 0 2px; }
+.copy { font: 500 .75rem var(--f-body); border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 3px 8px; cursor: pointer; margin-left: 6px; }
+
+/* timeline */
+.tl { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.tl li { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 16px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.tl time { font: .8rem var(--f-mono); color: var(--muted); padding-top: 2px; }
+.tl li.now time { color: var(--accent); font-weight: 500; }
+.tl p { font-size: .92rem; }
+
+/* commits */
+.feed { list-style: none; margin: 0; padding: 0; columns: 2 320px; column-gap: 28px; }
+.feed li { break-inside: avoid; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: .85rem; display: grid; grid-template-columns: 5.4rem minmax(0, 1fr); gap: 10px; }
+.feed time { font: .74rem var(--f-mono); color: var(--muted); padding-top: 2px; }
+
+.sources { columns: 2 340px; column-gap: 28px; font-size: .86rem; padding-left: 1.1rem; margin: 0; }
+.sources li { break-inside: avoid; margin-bottom: 6px; }
+footer { border-top: 1px solid var(--line); padding-block: 24px 40px; font-size: .8rem; color: var(--muted); }
+footer p { max-width: 90ch; margin-bottom: 6px; }
+
+@media (max-width: 880px) {
+  .status, .two, .guide { grid-template-columns: minmax(0, 1fr); }
+  .air { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .reach-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .axis { margin-left: 0; }
+  .bar { height: 44px; }
+  .bar .val { left: 0 !important; top: 24px; padding-left: 0; }
+  .tl li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .dial-read b { font-size: 1rem; }
+}
+</style>
+
+<div class="strip">
+  <div class="wrap">
+    <div class="brand"><span class="pb" aria-hidden="true">Pb</span>Iowa Lead Watch</div>
+    <div class="unofficial"><strong>Unofficial.</strong> Not from the Army or any agency. Follow local officials, not this page.</div>
+  </div>
+</div>
+
+<header class="wrap status">
+  <div>
+    <span class="pill" id="pill"><span class="dot"></span><span id="pill-text">Scheduled</span></span>
+    <h1 style="margin-top:12px">Lead azide detonation at the Iowa Army Ammunition Plant</h1>
+    <p class="lede">The Army plans two controlled blasts of about 9,700 lb of degraded lead azide (68 drums, about 6,900 lb of lead) inside earth-covered magazines near Middletown, Iowa. This page follows the timing, the blast-hour wind, and where the open <a href="https://github.com/iowaleadtracker/iowaleadtracker">Iowa Lead Tracker</a> model says the lead could settle.</p>
+  </div>
+  <div class="clock" aria-live="polite">
+    <div class="eyebrow" id="clock-label">Scheduled for Wed, Nov. 25, 9:00 a.m. CST</div>
+    <div class="count" id="count">
+      <div><b id="c-h">--</b><span>hours</span></div>
+      <div><b id="c-m">--</b><span>min</span></div>
+      <div><b id="c-s">--</b><span>sec</span></div>
+    </div>
+    <p id="clock-note" style="font-size:.86rem"></p>
+    <dl class="facts">
+      <dt>Site</dt><dd>Iowa AAP, Middletown, Iowa <span class="num muted">40.8255, −91.2665</span></dd>
+      <dt>Weather data</dt><dd id="wx-source">Loading…</dd>
+      <dt>Page status</dt><dd id="page-asof"></dd>
+    </dl>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Wind at blast time</div><h2>Where the wind sends the cloud</h2></div>
+        <p>Pick a weather model and hour in the table; the dial follows.</p>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <div class="controls">
+            <label for="case-seg">Lead in the air</label>
+            <div class="seg" id="case-seg" role="group" aria-label="Release case"></div>
+          </div>
+          <svg id="dial" viewBox="0 0 560 560" role="img" aria-labelledby="dial-title dial-desc">
+            <title id="dial-title">Downwind dial</title>
+            <desc id="dial-desc">Towns around the plant by direction and distance, with the downwind sector shaded out to the model's farthest yellow ground-lead line.</desc>
+          </svg>
+          <div class="dial-read">
+            <div><b id="r-wind">–</b><span>surface wind</span></div>
+            <div><b id="r-head">–</b><span>cloud heads</span></div>
+            <div><b id="r-reach">–</b><span>yellow line reach</span></div>
+          </div>
+          <p class="towns" id="towns"></p>
+        </div>
+        <div class="panel">
+          <h3>EPA permit weather check, hour by hour</h3>
+          <p class="note" style="margin:4px 0 10px">The emergency permit bars the blast with surface wind under 1 or over 15 mph, wind over 30 mph at 1,000–3,000 ft, or rain. Each cell: surface wind, direction it blows from, and the strongest wind at 1,000–3,000 ft.</p>
+          <div class="tbl-wrap"><table id="wx"></table></div>
+          <p class="note">The permit also bars thunderstorms, fog, a low overcast and an inversion, which a point forecast can't settle. All four models show 100% cloud cover this morning. Wind speeds are model forecasts at the plant, not measurements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Model results · forecast of Nov. 25</div><h2>How far lead could settle</h2></div>
+        <p>Farthest reach of each EPA dust-lead level, any blast time from 8:30 to 9:30 a.m.</p>
+      </div>
+      <div class="panel">
+        <div class="reach" id="reach"></div>
+        <div class="axis" id="axis"></div>
+        <div class="legend">
+          <span><i style="background:var(--lvl-y)"></i>5 µg/ft² · stay indoors line</span>
+          <span><i style="background:var(--lvl-o)"></i>40 µg/ft²</span>
+          <span><i style="background:var(--lvl-r)"></i>100 µg/ft² · also wet-clean surfaces children touch</span>
+          <span><i style="border:1.5px dashed var(--lvl-y)"></i>yellow, farthest in any of four forecasts</span>
+        </div>
+        <div class="air" id="air"></div>
+        <p class="note">Solid bars use the HRRR forecast the tracker shows by default. Air figures are the highest one-hour average, all close to the plant, against DOE's PAC-1 level for lead of 32 µg/m³. The Army's own Nov. 24 "Mitigated 0.26" maps show 27 sq mi above 100 µg/ft² and 148 sq mi above 5. The farthest distances depend on how fast the evening air calms, so they move between forecast updates. Numbers from the tracker's update of Nov. 25, 7:43 a.m. CST.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Official guidance</div><h2>What officials are telling people</h2></div>
+      </div>
+      <div class="guide">
+        <div class="panel">
+          <h3>Relocation zone</h3>
+          <p>FEMA is supporting relocation of all residents of Middletown and the immediate area, starting Nov. 24. The zone is a 5-mile cone southwest of the plant, one mile past the Army's modeled path.</p>
+        </div>
+        <div class="panel">
+          <h3>Everyone else nearby</h3>
+          <p>The Army asks people outside the zone to shelter in place with windows and doors closed. Inside the 5 µg/ft² line, stay indoors; inside 100, also wet-clean surfaces children touch.</p>
+        </div>
+        <div class="panel">
+          <h3>Help line</h3>
+          <p>FEMA Helpline, 24/7, for the evacuation area or assistance:</p>
+          <span class="phone" id="phone">1-800-621-3362</span><button class="copy" id="copy" type="button">Copy</button>
+          <p style="margin-top:6px">Army map updates: <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant">army.mil/asc</a>, six hours before the blast and hourly after.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">How we got here</div><h2>Timeline</h2></div></div>
+      <ol class="tl" id="timeline"></ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">github.com/iowaleadtracker</div><h2>Tracker updates</h2></div>
+        <p id="feed-src"></p>
+      </div>
+      <ul class="feed" id="feed"></ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">Sources</div><h2>Where this comes from</h2></div></div>
+      <ul class="sources">
+        <li><a href="https://iowaleadtracker.com/">Iowa Lead Tracker</a>, interactive maps, and its <a href="https://github.com/iowaleadtracker/iowaleadtracker">source, saved forecasts and assumptions</a> (CC BY 4.0 text and maps, MIT code). Mirror: <a href="https://iowaleadtracker.github.io/">iowaleadtracker.github.io</a></li>
+        <li>Army public safety advisory, Nov. 24: <a href="https://www.army.mil/article/297039">army.mil/article/297039</a></li>
+        <li>Army announcement of the controlled detonation: <a href="https://www.army.mil/article/297069/army_announces_controlled_detonation_of_degraded_explosive_material_at_iowa_army_ammunition_plant">army.mil/article/297069</a></li>
+        <li>Army postponement, Nov. 19: <a href="https://www.army.mil/article/296926">army.mil/article/296926</a></li>
+        <li>EPA emergency permit (redacted): <a href="https://www.epa.gov/system/files/documents/2026-11/iaaap-emergency-permit-for-treatment-and-storage-final_redacted.pdf">epa.gov PDF</a></li>
+        <li>Iowa HSEMD, munitions disposition resources: <a href="https://homelandsecurity.iowa.gov/iowa-army-munitions-disposition-resources">homelandsecurity.iowa.gov</a></li>
+        <li>Illinois EPA updates: <a href="https://epa.illinois.gov/iowa-plant-updates.html">epa.illinois.gov</a></li>
+        <li>CNN live updates, Nov. 25: <a href="https://www.cnn.com/2026/11/25/us/live-news/iowa-lead-azide-detonation">cnn.com</a></li>
+        <li>ABC News, Wednesday detonation: <a href="https://abcnews.com/US/iowa-detonation-lead-azide-army/story?id=138425051">abcnews.com</a></li>
+        <li>Iowa Public Radio, court lifts stay, Nov. 23: <a href="https://www.iowapublicradio.org/ipr-news/2026-11-23/court-lifts-stay-block-iowa-lead-detonation">iowapublicradio.org</a></li>
+        <li>Iowa Public Radio, safety tips and plume maps: <a href="https://www.iowapublicradio.org/environment/2026-11-19/army-lead-detonation-public-health-safety-risks">iowapublicradio.org</a></li>
+        <li>Mitigation and the 1977 precedent, Shaw Local, Nov. 24: <a href="https://www.shawlocal.com/news/2026/11/24/heres-how-army-plans-to-minimize-toxic-lead-dust-following-iowa-ammunitions-blast/">shawlocal.com</a></li>
+        <li>EPA dust-lead action levels, 40 CFR 745.227: <a href="https://www.ecfr.gov/current/title-40/part-745/section-745.227">ecfr.gov</a></li>
+        <li>Weather: <a href="https://open-meteo.com">Open-Meteo</a> (HRRR, RRFS, GFS, ECMWF), CC BY 4.0</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Iowa Lead Watch is an independent summary page. It is not affiliated with the Iowa Lead Tracker, the U.S. Army, FEMA, EPA or any state agency. The model figures are screening estimates built on assumptions that may be wrong. A place outside a shaded area may still get lead, and a place inside it may get none you could measure. Don't use this page to decide whether you're safe.</p>
+    <p>Model numbers and saved forecasts: Iowa Lead Tracker, CC BY 4.0. Weather: Open-Meteo, CC BY 4.0.</p>
+  </div>
+</footer>
+
+<script src="snapshot.js"></script>
+<script>
+(() => {
+  "use strict";
+  // ---- fixed inputs -------------------------------------------------------
+  const BLAST = new Date("2026-11-25T15:00:00Z");          // 9:00 a.m. CST, Army advisory + FEMA alert
+  const STATUS_ASOF = "Nov. 25, 8:20 a.m. CST";             // when the status text below was last checked
+  const PLANT = { lat: 40.825518, lon: -91.266502 };
+  const MODELS = ["HRRR", "RRFS", "GFS", "ECMWF"];
+  const OM_IDS = { HRRR: "ncep_hrrr_conus", RRFS: "ncep_rrfs_conus", GFS: "gfs_global", ECMWF: "ecmwf_ifs025" };
+  const HOURS_UTC = [13, 14, 15, 16, 17, 18];               // 7 a.m. – noon CST
+
+  // Iowa Lead Tracker, update of Nov. 25 7:43 a.m. CST (llms.txt). Distances in miles.
+  const CASES = [
+    { id: "low",    name: "Low",               pct: 7,   lb: 480,  y: 19, yAny: 24, o: 3.8, r: 0.7, air: 72,   pac: 3.2 },
+    { id: "army",   name: "U.S. Army mitigated", pct: 26, lb: 1800, y: 37, yAny: 45, o: 12,  r: 5.9, air: 269,  pac: 11 },
+    { id: "high",   name: "High",              pct: 55,  lb: 3800, y: 56, yAny: 65, o: 19,  r: 11,  air: 569,  pac: 19 },
+    { id: "permit", name: "EPA permit",        pct: 100, lb: 6900, y: 74, yAny: 90, o: 26,  r: 16,  air: 1033, pac: 27 },
+  ];
+
+  // Approximate town centers, from the tracker's forecast_summary.py
+  const TOWNS = [
+    ["Burlington, IA", 40.808, -91.113, 1], ["Danville, IA", 40.861, -91.315], ["West Burlington, IA", 40.825, -91.157],
+    ["Wever, IA", 40.711, -91.233], ["West Point, IA", 40.716, -91.451, 1], ["Fort Madison, IA", 40.630, -91.315, 1],
+    ["Donnellson, IA", 40.643, -91.565, 1], ["Montrose, IA", 40.531, -91.416], ["Keokuk, IA", 40.397, -91.385, 1],
+    ["New London, IA", 40.927, -91.400], ["Mount Pleasant, IA", 40.964, -91.551, 1], ["Mediapolis, IA", 41.008, -91.164],
+    ["Nauvoo, IL", 40.550, -91.385, 1], ["Dallas City, IL", 40.636, -91.163], ["Hamilton, IL", 40.396, -91.339],
+    ["Warsaw, IL", 40.359, -91.434], ["Carthage, IL", 40.416, -91.136, 1], ["Oquawka, IL", 40.932, -90.947, 1],
+    ["Macomb, IL", 40.459, -90.672, 1], ["Quincy, IL", 39.936, -91.410, 1], ["Kahoka, MO", 40.420, -91.719, 1],
+    ["Alexandria, MO", 40.359, -91.457], ["Canton, MO", 40.125, -91.625, 1], ["La Grange, MO", 40.042, -91.497],
+    ["Palmyra, MO", 39.794, -91.523, 1], ["Hannibal, MO", 39.708, -91.358, 1],
+  ].map(([name, lat, lon, label]) => ({ name, lat, lon, label: !!label, ...polar(lat, lon) }));
+
+  const TIMELINE = [
+    ["Nov. 19", "Army postpones the blast from Fri., Nov. 20 to Mon., Nov. 23, \"until the latest possible moment prior to a forecasted temperature drop.\" Late that day the 8th Circuit puts EPA's emergency permit on hold while it weighs a challenge by the Iowa Environmental Council and Sierra Club Iowa Chapter."],
+    ["Nov. 21", "Government tells the court the Army intends to use an emergency exclusion in EPA's rules to detonate without the permit, while following its terms."],
+    ["Nov. 22", "A court filing says the blast moved to Tue., Nov. 24. Late that night the Army sets Wed., Nov. 25 \"to allow for optimal weather conditions and all mitigation measures to be emplaced.\""],
+    ["Nov. 23", "President Trump orders a hold until the 8th Circuit agrees. That afternoon the court lifts its hold on the permit. The Acting Secretary of the Army says the blast will be Wednesday morning."],
+    ["Nov. 24", "Army public safety advisory sets about 9 a.m. Wednesday and publishes \"Mitigated 0.26\" plume maps. FEMA alert goes to phones near the plant. FEMA-supported relocation of Middletown and a 5-mile cone southwest begins. Army briefs mitigation: sand barriers, water walls, gel blocks, foam, misters, and a vent aimed at an unpopulated part of the plant."],
+    ["Nov. 25, 7:13 a.m.", "Army's Iowa AAP update: two controlled detonations planned today, timing pending weather."],
+    ["Nov. 25, 8:00 a.m.", "Iowa Lead Tracker pulls its latest forecast: northeast wind near 10 mph at 9 a.m., cloud heading southwest past West Point, Iowa, inside the permit's wind limits."],
+    ["Nov. 25, 9:00 a.m.", "Scheduled time of the blasts.", "now"],
+  ];
+
+  // ---- helpers -------------------------------------------------------------
+  function polar(lat, lon) {
+    const R = 3958.8, toR = Math.PI / 180;
+    const p1 = PLANT.lat * toR, p2 = lat * toR, dl = (lon - PLANT.lon) * toR;
+    const a = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    const dist = 2 * R * Math.asin(Math.sqrt(a));
+    const y = Math.sin(dl) * Math.cos(p2), x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+    return { dist, brg: (Math.atan2(y, x) / toR + 360) % 360 };
+  }
+  const PTS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const compass = d => PTS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+  const angDiff = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+  const fmt = n => n == null ? "–" : (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10).toString();
+  const cst = iso => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
+  const cstDT = iso => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
+  const el = (tag, attrs = {}, kids = []) => {
+    const n = document.createElementNS(tag === "svg" || attrs.svg ? "http://www.w3.org/2000/svg" : "http://www.w3.org/1999/xhtml", tag);
+    for (const [k, v] of Object.entries(attrs)) if (k !== "svg") k === "text" ? (n.textContent = v) : n.setAttribute(k, v);
+    for (const c of [].concat(kids)) n.append(c);
+    return n;
+  };
+  const S = (tag, attrs = {}) => el(tag, { ...attrs, svg: 1 });
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  // ---- state ---------------------------------------------------------------
+  const snap = window.SNAPSHOT || { models: {}, commits: [] };
+  let wx = snap.models;                       // { HRRR: {t, ws10, wd10, cloud, precip, temp, aloft} }
+  let wxSource = snap.pulled ? `Iowa Lead Tracker's saved forecast, pulled ${cstDT(snap.pulled)} CST` : "No forecast loaded";
+  const state = { model: "HRRR", hour: 15, caseId: store.get("ilw-case") || "army" };
+  if (!CASES.some(c => c.id === state.caseId)) state.caseId = "army";
+
+  function at(model, hourUtc) {
+    const m = wx[model]; if (!m || !m.t) return null;
+    const i = m.t.findIndex(t => new Date(t).getUTCHours() === hourUtc && new Date(t).getUTCDate() === 25);
+    if (i < 0) return null;
+    return { ws: m.ws10[i], wd: m.wd10[i], aloft: m.aloft ? m.aloft[i] : null, precip: m.precip[i], cloud: m.cloud[i], temp: m.temp[i] };
+  }
+  function permitOK(v) {
+    if (!v || v.ws == null) return null;
+    const reasons = [];
+    if (v.ws < 1) reasons.push("surface wind under 1 mph");
+    if (v.ws > 15) reasons.push("surface wind over 15 mph");
+    if (v.aloft != null && v.aloft > 30) reasons.push("wind aloft over 30 mph");
+    if (v.precip > 0) reasons.push("rain");
+    return reasons;
+  }
+
+  // ---- countdown -----------------------------------------------------------
+  function tick() {
+    const ms = BLAST - Date.now();
+    const pill = document.getElementById("pill"), pt = document.getElementById("pill-text"), note = document.getElementById("clock-note");
+    if (ms > 0) {
+      const s = Math.floor(ms / 1000);
+      document.getElementById("c-h").textContent = String(Math.floor(s / 3600)).padStart(2, "0");
+      document.getElementById("c-m").textContent = String(Math.floor(s / 60) % 60).padStart(2, "0");
+      document.getElementById("c-s").textContent = String(s % 60).padStart(2, "0");
+      pt.textContent = "Scheduled · weather permitting";
+      note.textContent = "The Army says it will confirm a more precise time after checking the weather. Times can still slip.";
+    } else {
+      document.getElementById("count").hidden = true;
+      pill.classList.add("warn");
+      pt.textContent = "Scheduled time passed";
+      document.getElementById("clock-label").textContent = `Scheduled for 9:00 a.m. CST · ${Math.floor(-ms / 60000)} min ago`;
+      note.innerHTML = 'This page doesn\'t confirm whether the blasts happened. Check the <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant">Army\'s updates</a> and local officials.';
+    }
+  }
+  tick(); setInterval(tick, 1000);
+  document.getElementById("page-asof").textContent = `Status text checked ${STATUS_ASOF}`;
+
+  // ---- permit table --------------------------------------------------------
+  function renderTable() {
+    const t = document.getElementById("wx"); t.replaceChildren();
+    t.append(el("thead", {}, el("tr", {}, [el("th", { text: "CST" }), ...MODELS.map(m => el("th", { text: m }))])));
+    const tb = el("tbody");
+    for (const h of HOURS_UTC) {
+      const label = cst(new Date(Date.UTC(2026, 10, 25, h)).toISOString());
+      const tr = el("tr", { class: h === 15 ? "blast" : "" }, el("td", { text: label + (h === 15 ? " ◂" : "") }));
+      for (const m of MODELS) {
+        const v = at(m, h), ok = permitOK(v);
+        const td = el("td", { class: "cell" + (m === state.model && h === state.hour ? " sel" : ""), tabindex: "0" });
+        if (!v) { td.textContent = "–"; td.className = ""; }
+        else {
+          const arrow = el("span", { class: "arrow", style: `transform:rotate(${v.wd + 180}deg)`, "aria-hidden": "true", text: "↑" });
+          td.append(el("div", {}, [arrow, ` ${fmt(v.ws)} ${compass(v.wd)}`, el("span", { class: "chip " + (ok.length ? "no" : "ok"), text: ok.length ? "OUT" : "OK", title: ok.length ? ok.join(", ") : "Inside the permit's wind and rain limits" })]));
+          td.append(el("div", { class: "sub", text: v.aloft != null ? `${fmt(v.aloft)} mph aloft` : "aloft n/a" }));
+          td.setAttribute("aria-label", `${m} ${label}: ${fmt(v.ws)} mph from ${compass(v.wd)}, ${ok.length ? "outside permit: " + ok.join(", ") : "inside permit limits"}`);
+          const pick = () => { state.model = m; state.hour = h; renderTable(); renderDial(); };
+          td.addEventListener("click", pick);
+          td.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+        }
+        tr.append(td);
+      }
+      tb.append(tr);
+    }
+    t.append(tb);
+  }
+
+  // ---- dial ----------------------------------------------------------------
+  const C = 280, RMAX = 250, DMAX = 95;
+  const rad = d => RMAX * Math.sqrt(Math.min(d, DMAX) / DMAX);   // square-root scale keeps close towns legible
+  const xy = (brg, d) => [C + rad(d) * Math.sin(brg * Math.PI / 180), C - rad(d) * Math.cos(brg * Math.PI / 180)];
+  function wedge(center, half, d0, d1) {
+    const r0 = rad(d0), r1 = rad(d1), a0 = center - half, a1 = center + half;
+    const p = (a, r) => [C + r * Math.sin(a * Math.PI / 180), C - r * Math.cos(a * Math.PI / 180)];
+    const [x1, y1] = p(a0, r1), [x2, y2] = p(a1, r1), large = half * 2 > 180 ? 1 : 0;
+    if (r0 === 0) return `M${C},${C} L${x1},${y1} A${r1},${r1} 0 ${large} 1 ${x2},${y2} Z`;
+    const [x3, y3] = p(a1, r0), [x4, y4] = p(a0, r0);
+    return `M${x4},${y4} L${x1},${y1} A${r1},${r1} 0 ${large} 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 0 ${x4},${y4} Z`;
+  }
+  function renderDial() {
+    const svg = document.getElementById("dial");
+    [...svg.querySelectorAll(":scope > :not(title):not(desc)")].forEach(n => n.remove());
+    const cs = CASES.find(c => c.id === state.caseId);
+    const v = at(state.model, state.hour);
+    // spread of directions across models at this hour
+    const dirs = MODELS.map(m => at(m, state.hour)).filter(x => x && x.wd != null).map(x => (x.wd + 180) % 360);
+    const head = v ? (v.wd + 180) % 360 : null;
+    const half = head == null ? 0 : Math.max(12, Math.max(...dirs.map(d => angDiff(d, head))) + 8);
+
+    const g = S("g");
+    for (const d of [5, 20, 45, 90]) {
+      g.append(S("circle", { cx: C, cy: C, r: rad(d), fill: "none", stroke: "var(--ring)", "stroke-dasharray": d === 90 ? "" : "3 4" }));
+      g.append(Object.assign(S("text", { x: C + 4, y: C - rad(d) - 4, "font-size": 11, style: "fill:var(--muted)" }), { textContent: `${d} mi` }));
+    }
+    for (const [lab, b] of [["N", 0], ["E", 90], ["S", 180], ["W", 270]]) {
+      const [x, y] = xy(b, DMAX * 1.0);
+      const dx = b === 90 ? 10 : b === 270 ? -10 : 0, dy = b === 0 ? -8 : b === 180 ? 16 : 4;
+      g.append(Object.assign(S("text", { x: x + dx, y: y + dy, "font-size": 12, "text-anchor": "middle", "font-weight": 600, style: "fill:var(--muted)" }), { textContent: lab }));
+    }
+    // state lines are not drawn; the Mississippi roughly separates IA from IL here
+    // FEMA relocation cone (approximate): 5 mi toward SW
+    g.append(S("path", { d: wedge(225, 22.5, 0, 5), fill: "none", stroke: "var(--ink)", "stroke-width": 1.2, "stroke-dasharray": "2 2" }));
+    if (head != null) {
+      g.append(S("path", { d: wedge(head, half, 0, cs.yAny), fill: "none", stroke: "var(--lvl-y)", "stroke-width": 1.5, "stroke-dasharray": "5 4" }));
+      g.append(S("path", { d: wedge(head, half, 0, cs.y), fill: "var(--plume)", stroke: "var(--lvl-y)", "stroke-width": 1.5 }));
+      g.append(S("path", { d: wedge(head, half * .8, 0, cs.o), fill: "var(--lvl-o)", "fill-opacity": .45 }));
+      g.append(S("path", { d: wedge(head, half * .6, 0, cs.r), fill: "var(--lvl-r)", "fill-opacity": .6 }));
+      const [ax, ay] = xy(head, Math.min(cs.y, DMAX) * .55);
+      g.append(S("line", { x1: C, y1: C, x2: ax, y2: ay, stroke: "var(--ink)", "stroke-width": 2, "marker-end": "url(#ah)" }));
+    }
+    const defs = S("defs");
+    const mk = S("marker", { id: "ah", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+    mk.append(S("path", { d: "M0,0 L10,5 L0,10 z", fill: "var(--ink)" }));
+    defs.append(mk); svg.append(defs);
+
+    const hit = [];
+    for (const t of TOWNS) {
+      const inside = head != null && t.dist <= cs.y && angDiff(t.brg, head) <= half;
+      if (inside) hit.push(t);
+      const [x, y] = xy(t.brg, t.dist);
+      g.append(S("circle", { cx: x, cy: y, r: inside ? 4.5 : 3, fill: inside ? "var(--lvl-o)" : "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.2 }));
+      if (t.label || inside) {
+        const right = x >= C;
+        g.append(Object.assign(S("text", { x: x + (right ? 7 : -7), y: y + 4, "font-size": 11.5, "text-anchor": right ? "start" : "end", "font-weight": inside ? 600 : 400 }), { textContent: t.name.replace(/, (IA|IL|MO)$/, "") }));
+      }
+    }
+    g.append(S("rect", { x: C - 6, y: C - 6, width: 12, height: 12, fill: "var(--ink)" }));
+    g.append(Object.assign(S("text", { x: C + 10, y: C + 18, "font-size": 11.5, "font-weight": 600 }), { textContent: "Iowa AAP" }));
+    svg.append(g);
+
+    document.getElementById("r-wind").textContent = v ? `${fmt(v.ws)} mph ${compass(v.wd)}` : "–";
+    document.getElementById("r-head").textContent = head != null ? `${compass(head)} · ${Math.round(head)}°` : "–";
+    document.getElementById("r-reach").textContent = `${cs.y} mi`;
+    hit.sort((a, b) => a.dist - b.dist);
+    const hr = cst(new Date(Date.UTC(2026, 10, 25, state.hour)).toISOString());
+    document.getElementById("towns").innerHTML = "";
+    document.getElementById("towns").append(
+      el("b", { text: `${state.model}, ${hr} blast, ${cs.name} case (${cs.pct}% airborne): ` }),
+      hit.length ? `towns inside the shaded sector: ${hit.map(t => `${t.name} (${Math.round(t.dist)} mi)`).join(", ")}.` : "no listed towns inside the shaded sector.",
+      el("span", { class: "muted", text: " The sector is a simplification: the real cloud bends with the wind through the day. The dotted wedge near the plant is the FEMA relocation cone, drawn approximately. See the tracker's map for the modeled footprint." })
+    );
+  }
+  function renderCases() {
+    const seg = document.getElementById("case-seg"); seg.replaceChildren();
+    for (const c of CASES) {
+      const b = el("button", { type: "button", "aria-pressed": String(c.id === state.caseId), text: `${c.name} ${c.pct}%` });
+      b.addEventListener("click", () => { state.caseId = c.id; store.set("ilw-case", c.id); renderCases(); renderDial(); });
+      seg.append(b);
+    }
+  }
+
+  // ---- reach bars ----------------------------------------------------------
+  function renderReach() {
+    const max = 100, box = document.getElementById("reach");
+    for (const c of CASES) {
+      const bar = el("div", { class: "bar" });
+      bar.append(el("i", { class: "any", style: `width:${c.yAny / max * 100}%` }));
+      bar.append(el("i", { class: "y", style: `width:${c.y / max * 100}%` }));
+      bar.append(el("i", { class: "o", style: `width:${c.o / max * 100}%` }));
+      bar.append(el("i", { class: "r", style: `width:${Math.max(c.r / max * 100, .6)}%` }));
+      bar.append(el("span", { class: "val num", style: `left:${c.yAny / max * 100}%`, text: `${c.y} mi (${c.yAny}) · ${c.o} · ${c.r}` }));
+      box.append(el("div", { class: "reach-row" }, [
+        el("div", { class: "lab" }, [el("b", { text: c.name }), el("span", { text: `${c.pct}% airborne, ~${c.lb.toLocaleString()} lb lead` })]),
+        bar,
+      ]));
+    }
+    const ax = document.getElementById("axis");
+    for (const d of [0, 25, 50, 75, 100]) ax.append(el("span", { style: `left:${d}%`, text: `${d} mi` }));
+    const air = document.getElementById("air");
+    for (const c of CASES) air.append(el("div", {}, [el("b", { text: `${c.air.toLocaleString()} µg/m³` }), el("span", { text: `${c.name}: peak 1-hr air; above PAC-1 out to ${c.pac} mi` })]));
+  }
+
+  // ---- timeline & feed -----------------------------------------------------
+  function renderTimeline() {
+    const ol = document.getElementById("timeline");
+    for (const [d, txt, cls] of TIMELINE) ol.append(el("li", { class: cls || "" }, [el("time", { text: d }), el("p", { text: txt })]));
+  }
+  function renderFeed(commits, src) {
+    const ul = document.getElementById("feed"); ul.replaceChildren();
+    for (const c of commits.slice(0, 16)) {
+      ul.append(el("li", {}, [el("time", { datetime: c.date, text: cstDT(c.date).replace(",", "") }),
+        el("a", { href: `https://github.com/iowaleadtracker/iowaleadtracker/commit/${c.sha}`, text: c.msg.replace(/\s*\(#\d+\)$/, "") })]));
+    }
+    document.getElementById("feed-src").textContent = src;
+  }
+
+  // ---- live refresh (works on a normal web host; sandboxed previews fall back to the snapshot) ----
+  async function getJSON(url, ms = 8000) {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
+    try { const r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); }
+    finally { clearTimeout(t); }
+  }
+  async function liveWeather() {
+    const lv = [1000, 975, 950, 925, 900, 850, 800, 700];
+    const vars = ["wind_speed_10m", "wind_direction_10m", "cloud_cover", "precipitation", "temperature_2m",
+      ...lv.flatMap(p => [`wind_speed_${p}hPa`, `geopotential_height_${p}hPa`])];
+    const out = {};
+    await Promise.all(MODELS.map(async name => {
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${PLANT.lat}&longitude=${PLANT.lon}&wind_speed_unit=mph&timezone=GMT&start_date=2026-11-25&end_date=2026-11-25&models=${OM_IDS[name]}&hourly=${vars.join(",")}`;
+      const d = await getJSON(u), h = d.hourly, elev = d.elevation ?? 222;
+      if (!h.wind_speed_10m || h.wind_speed_10m.every(v => v == null)) return;
+      const aloft = h.time.map((_, i) => {
+        let best = null;
+        for (const p of lv) {
+          const z = h[`geopotential_height_${p}hPa`]?.[i], s = h[`wind_speed_${p}hPa`]?.[i];
+          if (z == null || s == null) continue;
+          const ft = (z - elev) / .3048;
+          if (ft >= 1000 && ft <= 3000) best = Math.max(best ?? 0, s);
+        }
+        return best;
+      });
+      out[name] = { t: h.time.map(t => t + ":00Z"), ws10: h.wind_speed_10m, wd10: h.wind_direction_10m, cloud: h.cloud_cover, precip: h.precipitation, temp: h.temperature_2m, aloft };
+    }));
+    if (Object.keys(out).length) {
+      wx = { ...wx, ...out };
+      wxSource = `Live from Open-Meteo, fetched ${cst(new Date().toISOString())} CST (${Object.keys(out).join(", ")})`;
+      document.getElementById("wx-source").textContent = wxSource;
+      renderTable(); renderDial();
+    }
+  }
+  async function liveCommits() {
+    const d = await getJSON("https://api.github.com/repos/iowaleadtracker/iowaleadtracker/commits?per_page=16");
+    renderFeed(d.map(c => ({ date: c.commit.committer.date, sha: c.sha.slice(0, 7), msg: c.commit.message.split("\n")[0] })), "Live from GitHub");
+  }
+
+  // ---- boot ----------------------------------------------------------------
+  document.getElementById("wx-source").textContent = wxSource;
+  document.getElementById("phone").title = "FEMA Helpline";
+  document.getElementById("copy").addEventListener("click", async e => {
+    try { await navigator.clipboard.writeText("1-800-621-3362"); e.target.textContent = "Copied"; }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("phone")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); e.target.textContent = "Selected"; }
+  });
+  renderCases(); renderTable(); renderDial(); renderReach(); renderTimeline();
+  renderFeed(snap.commits || [], snap.built ? `Snapshot of the repo, ${cstDT(snap.built)} CST` : "");
+  liveWeather().catch(() => {});
+  liveCommits().catch(() => {});
+  setInterval(() => { liveWeather().catch(() => {}); liveCommits().catch(() => {}); }, 10 * 60 * 1000);
+})();
+</script>
